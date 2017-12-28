@@ -132,9 +132,9 @@ class Game_Gui:
 
 	def create_board(self):
 		my_board = self.my_game.board
-		im_blck = tk.PhotoImage(file='~/go/black.gif')
-		im_wht = tk.PhotoImage(file='~/go/white.gif')
-		im_blnk = tk.PhotoImage(file='~/go/blank.gif')
+		im_blck = tk.PhotoImage(file='~/Go/img/black.gif')
+		im_wht = tk.PhotoImage(file='~/Go/img/white.gif')
+		im_blnk = tk.PhotoImage(file='~/Go/img/blank.gif')
 		for i in range(self.size):
 			for j in range(self.size):
 				# try only updating when board changes
@@ -158,9 +158,9 @@ class Game_Gui:
 			
 	def alter_board_cell(self, my_board, i, j):
 		
-		im_blck = tk.PhotoImage(file='~/go/black.gif')
-		im_blnk = tk.PhotoImage(file='~/go/blank.gif')
-		im_wht = tk.PhotoImage(file='~/go/white.gif')
+		im_blck = tk.PhotoImage(file='~/Go/img/black.gif')
+		im_wht = tk.PhotoImage(file='~/Go/img/white.gif')
+		im_blnk = tk.PhotoImage(file='~/Go/img/blank.gif')
 
 		label = self.label_grid[i,j]
 		if my_board[i,j] == 1:
