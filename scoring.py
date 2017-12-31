@@ -1,10 +1,8 @@
 import numpy as np
+import board as bd
 
 # This class scores the board
 class Scoring:
-
-	# tmp counting 
-	counter = 0
 
 	def __init__(self, game):
 		self.board = game.board
@@ -15,7 +13,7 @@ class Scoring:
 
 		# we do not want to go over blanks twice
 		self.seen_board = np.zeros(shape = (self.board_sz, self.board_sz))
-	
+
 	def add_score(self, blank_ls, stone_ls):
 		# must decide if 'Dame' for scoring  
 		has_white = False
@@ -47,52 +45,40 @@ class Scoring:
 		for coord in blank_ls:
 			self.seen_board[coord[0], coord[1]] = 1 # set it equal to 1
 
-	def _valid_move(self, start, blank_ls):
-		# test if valid move (exists on board, or isn't going into itself)
-		if (start[0] < 0 or start[0] >= self.board_sz
-			or start[1] < 0 or start[1] >= self.board_sz
-			or start in blank_ls):
-
-			#print("flood fill test: invalid move, ", start)
-			return False 
-		else:
-			return True
-
 	# recursively counts for score 
 	def flood_fill_cnt(self, start, blank_ls, stone_ls):
-		Scoring.counter += 1
+		row, col  = start[0], start[1]
 
-
-		row = start[0]
-		col = start[1]
-
-		if self._valid_move((row, col), blank_ls) == False:
+		if not bd.in_board(start, self.board_sz) or start in blank_ls:
+			#evalid_fill((row, col), blank_ls, stone_ls) == False:
 			return blank_ls, stone_ls
 
 		up = (row - 1, col)
 		down = (row + 1, col)
 		left = (row, col - 1)
 		right = (row, col + 1)
+		directions = [up, down, left, right]
 
 		# We need fast performance - need to check if valid BEFORE we recurse
 		if self.board[row, col] == 0: # it's a blank. keep counting score.
 			blank_ls.append((row, col))
-			if self._valid_move(up, blank_ls):
+
+			if bd.in_board(up, self.board_sz) and up not in blank_ls:
 				blank_ls1, stone_ls1 = self.flood_fill_cnt(up, blank_ls, stone_ls)
 			else: 
 				blank_ls1, stone_ls1 = blank_ls, stone_ls
 
-			if self._valid_move(down, blank_ls):
+			if bd.in_board(down, self.board_sz) and down not in blank_ls:
 				blank_ls2, stone_ls2 = self.flood_fill_cnt(down, blank_ls, stone_ls)
 			else: 
 				blank_ls2, stone_ls2 = blank_ls, stone_ls
 
-			if self._valid_move(left, blank_ls):
+			if bd.in_board(left, self.board_sz) and left not in blank_ls:
 				blank_ls3, stone_ls3 = self.flood_fill_cnt(left, blank_ls, stone_ls)
 			else: 
 				blank_ls3, stone_ls3 = blank_ls, stone_ls
 
-			if self._valid_move(right, blank_ls):
+			if bd.in_board(right, self.board_sz) and right not in blank_ls:
 				blank_ls4, stone_ls4 = self.flood_fill_cnt(right, blank_ls, stone_ls)
 			else: 
 				blank_ls4, stone_ls4 = blank_ls, stone_ls
@@ -103,17 +89,16 @@ class Scoring:
 		else:
 			raise ValueError
 
-		#blank_ls = blank_ls1.extend(blank_ls2.extend(blank_ls3.extend(blank_ls4)))
-		# extend is an inplace function
-		blank_ls = (blank_ls1 + blank_ls2) + (blank_ls3 + blank_ls4)
-		#if (len(stone_ls1) + len(stone_ls2) + len(stone_ls3) + len(stone_ls4) > 0):
-		stone_ls = (stone_ls1 + stone_ls2) + (stone_ls3 + stone_ls4)
+		# add up the lists
+		blank_ls = blank_ls1 + blank_ls2 + blank_ls3 + blank_ls4
+		stone_ls = stone_ls1 + stone_ls2 + stone_ls3 + stone_ls4
+	
+		#stone_ls = (all_stone_ls[0] + all_stone_ls[1]) + (all_stone_ls[2] + all_stone_ls[3]) 
 
 		return blank_ls, stone_ls
 
 	def score_it(self):
-		import time
-		t0 = time.time()
+
 		for i in range(self.board_sz):
 			for j in range(self.board_sz):
 				if self.seen_board[i, j] == 0:
@@ -128,8 +113,6 @@ class Scoring:
 		black_score = self.score[-1] + self.prisoners[1]
 		white_score = self.score[1] + self.prisoners[-1]
 
-		t1 = time.time()
-		print(t1 - t0)
 
 		final_score = {-1: black_score, 1: white_score + self.komi} 
 		return final_score
