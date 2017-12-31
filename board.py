@@ -9,6 +9,8 @@ class Game:
 		# keeps track of board history for 'ko' rule
 		self.board_hist = [np.copy(board)] 
 	
+		self.liberties = 0
+		self.same_col_set = set([])
 		# keeps track for scoring
 		self.prisoners = {-1: 0, 1: 0}
 
@@ -24,20 +26,35 @@ class Game:
 		moves_ls = self._get_cardinal_directions(move)
 		for elem in moves_ls:
 			# check OPPOSITE COLOR liberties
-			liberties, seen_ls = self.flood_fill_liberties(elem, flip(move[2]), [])
-			if liberties == 0 and len(seen_ls) != 0:
+			self.flood_fill_liberties(elem, flip(move[2]))
+			if self.liberties == 0 and len(self.same_col_set) != 0:
 				captures_anything = True	
+
+			# reset flood_fill params
+			self.same_col_set = set([])
+			self.liberties = 0
 
 		# The move captures nothing - now we check if is also suicidal 
 		if captures_anything is False:
 			# check CURRENT color liberties
-			liberties, seen_ls = self.flood_fill_liberties(move, move[2], [])
-			if liberties == 0:
-				# placing the piece gives 0 liberties. 
+			self.flood_fill_liberties((move[0], move[1]), move[2])
+
+			# placing the piece gives 0 liberties. suicidal
+			if self.liberties == 0:
+
+				# reset flood_fill params
+				self.same_col_set = set([])
+				self.liberties = 0
+
 				self.board = np.copy(self.board_hist[-1]) # reset the board
 				# False - the move IS suicidal and Invalid
 				return False
 			else: # there are liberties still. not suicidal
+
+				# reset flood_fill params
+				self.same_col_set = set([])
+				self.liberties = 0
+
 				self.board = np.copy(self.board_hist[-1]) # reset the board
 				return True
 			
@@ -92,44 +109,38 @@ class Game:
 	A recursive solution is used because the board size is very small (20x20),
 	and performance is not an issue
 	'''
-	def flood_fill_liberties(self, start, cap_color, seen_ls):
+	def flood_fill_liberties(self, start, cap_color):
 
-		# test if move is on the board grid or is already explored
-		if not in_board(start, self.board_sz) or start in seen_ls:
-			return 0, seen_ls
-
-		row = start[0]
-		col = start[1]
+		row, col = start
+		directions = self._get_cardinal_directions(start)
 
 		# the same color: keep looking
 		if self.board[row, col] == cap_color: 
-			seen_ls.append((row, col)) # keep track of the pieces seen
+			self.same_col_set.add((row, col)) # keep track of the pieces seen
 
 			# look in four directions for more spaces
-			libt1, _ = self.flood_fill_liberties((row - 1, col), cap_color, seen_ls)
-			libt2, _ = self.flood_fill_liberties((row + 1, col), cap_color, seen_ls)
-			libt3, _ = self.flood_fill_liberties((row, col - 1), cap_color, seen_ls)
-			libt4, _ = self.flood_fill_liberties((row, col + 1), cap_color, seen_ls)
+			for direction in directions: 
+				# test if move is on the board grid or is already explored
+				if (direction not in self.same_col_set):
+					self.flood_fill_liberties(direction, cap_color)
 
 		elif self.board[row, col] == 0: # there is a liberty - its blank
-			return 1, seen_ls
+			self.liberties += 1
+			return
 		elif self.board[row, col] == flip(cap_color): # opposite color. no liberty
-			return 0, seen_ls
+			return 
 		else:
 			raise ValueError
 
-		# sum up the liberties #TODO CHANGE
-		liberties = libt1 + libt2 + libt3 + libt4
-		return liberties, seen_ls
+		return 
 		
 	# removes the pieces in the 'seen' list if it has no liberties: they're captured
-	def remove_seen_ls(self, seen_ls):
-		for coord in seen_ls:
+	def remove_stones(self):
+		for coord in self.same_col_set:
 			x = coord[0]
 			y = coord[1]
 			self.board[x,y] = 0
 			
-
 	# looks in four directions to return list of directions to check
 	def _get_cardinal_directions(self, move):
 		# check life and death for all for directions
@@ -156,18 +167,22 @@ class Game:
 		
 		# run each check in four directions using flood_fill algorithm
 		for elem in valid_list:
-			liberties, seen_ls = self.flood_fill_liberties(elem, captured_color, [])
-			if liberties == 0:
-				self.remove_seen_ls(seen_ls)
+			self.flood_fill_liberties(elem, captured_color)
+			if self.liberties == 0:
+				self.remove_stones()
 
 				# updates prisoners count
-				prisoners_num = len(seen_ls)
+				prisoners_num = len(self.same_col_set)
 				if captured_color == -1:
 					self.prisoners[-1] += prisoners_num
 				elif captured_color == 1:
 					self.prisoners[1] += prisoners_num
 				else: 
 					raise ValueError
+
+			# reset liberties and same_col_set
+			self.liberties = 0
+			self.same_col_set = set([])
 
 	# places the piece on the board
 	def place_piece(self, move):

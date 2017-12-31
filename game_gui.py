@@ -23,7 +23,6 @@ class Game_Gui:
 		self.prisoners = tk.StringVar()
 		self.the_turn = tk.StringVar()
 		self.my_score = tk.StringVar()
-		self.score_bt_txt = tk.StringVar()
 		self.new_game_bt_txt = tk.StringVar()
 
 		# actual labels for storing info
@@ -49,9 +48,7 @@ class Game_Gui:
 
 		# set default text values for status var
 		self.prisoners.set("Black's Prisoners: 0   White's Prisoners: 0")
-		self.the_turn.set("Turn: Black")
 		self.my_score.set("Black Score: 0   White Score: 5.5")
-		self.score_bt_txt.set("Score It")
 		self.new_game_bt_txt.set("New Game")
 
 		self.turn_lab = tk.Label(self.top_frame, textvariable = self.the_turn, height = 3)
@@ -65,10 +62,6 @@ class Game_Gui:
 		self.bt = tk.Button(self.top_frame, text = "Pass", command = self._pass_on_click)
 		self.bt.pack(side = tk.RIGHT, fill = tk.X)
 
-		# Add the scoring button
-		self.bt = tk.Button(self.top_frame, textvariable = self.score_bt_txt, 
-			command = self._score_on_click)
-		self.bt.pack(side = tk.RIGHT, fill = tk.X)
 
 		# Add the new game button
 		self.bt = tk.Button(self.top_frame, textvariable = self.new_game_bt_txt, 
@@ -99,36 +92,31 @@ class Game_Gui:
 			self.turn = bd.flip(self.turn) # after turn ends, you flip
 
 	# second callback to change text of button while scoring
-	def _scoring_callback(self):
+	def _update_score(self):
 		score_obj = sc.Scoring(self.my_game)
 		score_dict = score_obj.score_it()
 		score_sts = "Black Score: " + str(score_dict[-1]) + "   " \
 			+ "White Score: " + str(score_dict[1])
 		self.my_score.set(score_sts)
-		self.score_bt_txt.set("Score It")
-
-	# stored action for scoring on click
-	def _score_on_click(self):
-		self.score_bt_txt.set("Scoring...")
-		self.root.after(20, self._scoring_callback)
 
 	# All of these get new text values of the status bar
 	def _update_status(self):
 
+		# 1 - update prisoners
 		prsn = self.my_game.prisoners
 		# captured prisoners are opposite color
-
 		prsn_sts = "Black's Prisoners: " + str(prsn[1]) + "   " \
 			+ "White's Prisoners: " + str(prsn[-1])
+		self.prisoners.set(prsn_sts)
 		
-		# move successful (oppsite turn now)
+		# 2 - update turn (oppsite turn now)
 		flip_turn = bd.flip(self.turn) 
 		turn_txt = "Black" if flip_turn == -1 else "White"
 		turn_sts = "Turn: " + turn_txt 
-
-
 		self.the_turn.set(turn_sts)
-		self.prisoners.set(prsn_sts)
+		
+		# 3 - update score
+		self._update_score()
 
 	# initially creates all the labels for the board
 	def create_board(self):
