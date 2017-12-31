@@ -1,6 +1,6 @@
 import numpy as np
 
-#TODO this is too slow. Only do it witha BUTTON
+# This class scores the board
 class Scoring:
 
 	# tmp counting 
@@ -17,7 +17,7 @@ class Scoring:
 		self.seen_board = np.zeros(shape = (self.board_sz, self.board_sz))
 	
 	def add_score(self, blank_ls, stone_ls):
-		# must decide if 'Dame'
+		# must decide if 'Dame' for scoring  
 		has_white = False
 		has_black = False
 
@@ -30,6 +30,7 @@ class Scoring:
 			else:
 				pass
 		
+		# exclusive or to check for 'dame'
 		if has_black ^ has_white:
 			print("has_black ", has_black, "has_white ", has_white)
 			print(has_black ^ has_white)
