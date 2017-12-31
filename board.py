@@ -95,7 +95,7 @@ class Game:
 	def flood_fill_liberties(self, start, cap_color, seen_ls):
 
 		# test if move is on the board grid or is already explored
-		if not self._in_board(start) or start in seen_ls:
+		if not in_board(start, self.board_sz) or start in seen_ls:
 			return 0, seen_ls
 
 		row = start[0]
@@ -129,12 +129,6 @@ class Game:
 			y = coord[1]
 			self.board[x,y] = 0
 			
-	def _in_board(self, elem):
-		if (elem[0] >= 0 and elem[0] <= self.board_sz
-			and elem[1] >= 0 and elem[1] <= self.board_sz):
-			return True
-		else:
-			return False
 
 	# looks in four directions to return list of directions to check
 	def _get_cardinal_directions(self, move):
@@ -148,7 +142,7 @@ class Game:
 		raw_list = [up, down, left, right]
 		valid_list = []
 		for elem in raw_list:
-			if self._in_board(elem):
+			if in_board(elem, self.board_sz):
 				valid_list.append(elem)
 
 		return valid_list
@@ -205,7 +199,12 @@ def flip(turn):
 		return 1				
 	elif turn is 1:
 		return -1
-	elif turn is 0:
-		return  'Not Empty' # used in scoring
 	else:
 		raise ValueError
+
+def in_board(elem, sz):
+	if (elem[0] >= 0 and elem[0] < sz
+		and elem[1] >= 0 and elem[1] < sz):
+		return True
+	else:
+		return False
