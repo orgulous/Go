@@ -16,8 +16,8 @@ class Game:
 
 	# function called from is_valid
 	# valid Moves must not be suicidal 
-	def not_suicidal(self, move):
-		self.place_piece(move)
+	def _not_suicidal(self, move):
+		self._place_piece(move)
 
 		# first check if move captures anything. If not, do logic for suicidal move
 		captures_anything = False
@@ -26,7 +26,7 @@ class Game:
 		moves_ls = self._get_cardinal_directions(move)
 		for elem in moves_ls:
 			# check OPPOSITE COLOR liberties
-			self.flood_fill_liberties(elem, flip(move[2]))
+			self._flood_fill_liberties(elem, flip(move[2]))
 			if self.liberties == 0 and len(self.same_col_set) != 0:
 				captures_anything = True	
 
@@ -37,7 +37,7 @@ class Game:
 		# The move captures nothing - now we check if is also suicidal 
 		if captures_anything is False:
 			# check CURRENT color liberties
-			self.flood_fill_liberties((move[0], move[1]), move[2])
+			self._flood_fill_liberties((move[0], move[1]), move[2])
 
 			# placing the piece gives 0 liberties. suicidal
 			if self.liberties == 0:
@@ -65,13 +65,13 @@ class Game:
 
 	# function called from is_valid
 	# determines if the ko rule is in effect
-	def ko_rule_valid(self, move):
-		self.place_piece(move)
+	def _ko_rule_valid(self, move):
+		self._place_piece(move)
 		# copy the prisoner dictionary for re-use
 		prisoner_dict = dict(self.prisoners)
 
 		# must evaluate the move to see
-		self.life_and_death(move)
+		self._life_and_death(move)
 		
 		ko_valid = True
 	
@@ -88,10 +88,10 @@ class Game:
 		return ko_valid
 		
 	# Greedy boolean evaluation to see if it is valid
-	def is_valid(self, move):
+	def _is_valid(self, move):
 		if self.board[move[0], move[1]] == 0:
-			if self.not_suicidal(move):
-				if self.ko_rule_valid(move):
+			if self._not_suicidal(move):
+				if self._ko_rule_valid(move):
 					return True
 				else:
 					return False
@@ -103,13 +103,12 @@ class Game:
 	'''
 	The main recursive algorithm for flood_fill.
 	Flood fill explores adjacent spaces in the board which are of a 
-	similar color. It returns the explored spaces and also the number of 
-	open adjacent spaces to the group
+	similar color. Stores info in global variable as it recurses
 
 	A recursive solution is used because the board size is very small (20x20),
 	and performance is not an issue
 	'''
-	def flood_fill_liberties(self, start, cap_color):
+	def _flood_fill_liberties(self, start, cap_color):
 
 		row, col = start
 		directions = self._get_cardinal_directions(start)
@@ -122,7 +121,7 @@ class Game:
 			for direction in directions: 
 				# test if move is on the board grid or is already explored
 				if (direction not in self.same_col_set):
-					self.flood_fill_liberties(direction, cap_color)
+					self._flood_fill_liberties(direction, cap_color)
 
 		elif self.board[row, col] == 0: # there is a liberty - its blank
 			self.liberties += 1
@@ -135,7 +134,7 @@ class Game:
 		return 
 		
 	# removes the pieces in the 'seen' list if it has no liberties: they're captured
-	def remove_stones(self):
+	def _remove_stones(self):
 		for coord in self.same_col_set:
 			x = coord[0]
 			y = coord[1]
@@ -159,7 +158,7 @@ class Game:
 		return valid_list
 
 	# Checks which pieces are alive and which are dead. Updates it
-	def life_and_death(self, move):
+	def _life_and_death(self, move):
 		captured_color = flip(move[2])
 
 		# look in four directions of piece placed to check captures
@@ -167,9 +166,9 @@ class Game:
 		
 		# run each check in four directions using flood_fill algorithm
 		for elem in valid_list:
-			self.flood_fill_liberties(elem, captured_color)
+			self._flood_fill_liberties(elem, captured_color)
 			if self.liberties == 0:
-				self.remove_stones()
+				self._remove_stones()
 
 				# updates prisoners count
 				prisoners_num = len(self.same_col_set)
@@ -185,7 +184,7 @@ class Game:
 			self.same_col_set = set([])
 
 	# places the piece on the board
-	def place_piece(self, move):
+	def _place_piece(self, move):
 		x = move[0]
 		y = move[1]
 		self.board[x,y] = move[2]
@@ -199,9 +198,9 @@ class Game:
 			return True	
 		
 		# make sure move is valid before placing
-		if self.is_valid(move):
-			self.place_piece(move)
-			self.life_and_death(move)
+		if self._is_valid(move):
+			self._place_piece(move)
+			self._life_and_death(move)
 			self.board_hist.append(np.copy(self.board))
 
 			return True

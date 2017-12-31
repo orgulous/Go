@@ -62,7 +62,6 @@ class Game_Gui:
 		self.bt = tk.Button(self.top_frame, text = "Pass", command = self._pass_on_click)
 		self.bt.pack(side = tk.RIGHT, fill = tk.X)
 
-
 		# Add the new game button
 		self.bt = tk.Button(self.top_frame, textvariable = self.new_game_bt_txt, 
 			command = self._new_game_on_click)
@@ -91,7 +90,7 @@ class Game_Gui:
 			self._gui_update()
 			self.turn = bd.flip(self.turn) # after turn ends, you flip
 
-	# second callback to change text of button while scoring
+	# updates the score every click
 	def _update_score(self):
 		score_obj = sc.Scoring(self.my_game)
 		score_dict = score_obj.score_it()
@@ -137,7 +136,6 @@ class Game_Gui:
 					lab = tk.Label(self.game_frame, image = im_blck, bd=0) 
 					lab.image = im_blck
 				else:
-					print(my_board[i,j])
 					raise ValueError
 
 				# store the reference to label into here for future use
@@ -146,7 +144,7 @@ class Game_Gui:
 				lab.bind('<Button-1>',lambda e,i=i,j=j: self._on_click(i,j,e))
 			
 	# updates the images in the cell
-	def alter_board_cell(self, my_board, i, j):
+	def _alter_board_cell(self, my_board, i, j):
 		
 		im_blck = tk.PhotoImage(file='~/Go/img/black.gif')
 		im_wht = tk.PhotoImage(file='~/Go/img/white.gif')
@@ -186,20 +184,16 @@ class Game_Gui:
 			for j in range(self.size):
 				# only updates cell if changed. Otherwise takes too long
 				if self._board_changed(my_board, i, j) or len(self.my_game.board_hist) < 2:
-					self.alter_board_cell(my_board,i, j)
+					self._alter_board_cell(my_board,i, j)
 	
 
 	# turns the board game into the right one
 	def _gui_update(self):
-		print("starting updating the board...")
 		self._update_board()
-		print("starting updating the status...")
 		self._update_status()
-		print("done computing updates...")
 
 	# continue to wait for the event. This is the main updating loop
 	def _on_click(self, i, j, event):
-		print(i, j, self.turn)
 		move = i, j, self.turn
 
 		# all logic on board updating is contained here
