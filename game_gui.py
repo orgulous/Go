@@ -26,11 +26,12 @@ class Game_Gui:
 		self.score_bt_txt = tk.StringVar()
 		self.new_game_bt_txt = tk.StringVar()
 
+		# actual labels for storing info
 		self.pris_lab = None
 		self.turn_lab = None
 		self.score_lab = None
 
-		# stores references to each label
+		# stores references to each label for new update
 		self.label_grid = np.ndarray(shape=(size,size), dtype=object)
 
 		self._set_gui_values()
@@ -74,32 +75,31 @@ class Game_Gui:
 			command = self._new_game_on_click)
 		self.bt.pack(side = tk.RIGHT, fill = tk.X)
 
-# These are the FINAL functionalities!!!
-
-	# double callback to change text of button while running for new game
-	def new_game_callback(self):
+	# second callback to change text of button while running for new game
+	def _new_game_callback(self):
 		self.my_game = bd.Game(self.komi, (np.zeros(shape = (self.size, self.size))).astype('int'))
 		self.turn = 1
 		self.the_turn.set("Turn: Black")
-		self.gui_update()
+		self._gui_update()
 		self.new_game_bt_txt.set("New Game")
 		self.turn = -1
 
+	# stored action for new game on click
 	def _new_game_on_click(self):
 		self.new_game_bt_txt.set("Clearing Board...")
-		self.root.after(20, self.new_game_callback)
+		self.root.after(20, self._new_game_callback)
 
+	# stored action for playing passing on click
 	def _pass_on_click(self):
-		print("we are passing")
-
 		move = (0, 0, 0) # final zero means pass
 		successful_move = self.my_game.update(move) 
 
 		if successful_move:
-			self.gui_update()
+			self._gui_update()
 			self.turn = bd.flip(self.turn) # after turn ends, you flip
 
-	def scoring_callback(self):
+	# second callback to change text of button while scoring
+	def _scoring_callback(self):
 		score_obj = sc.Scoring(self.my_game)
 		score_dict = score_obj.score_it()
 		score_sts = "Black Score: " + str(score_dict[-1]) + "   " \
@@ -107,9 +107,10 @@ class Game_Gui:
 		self.my_score.set(score_sts)
 		self.score_bt_txt.set("Score It")
 
+	# stored action for scoring on click
 	def _score_on_click(self):
 		self.score_bt_txt.set("Scoring...")
-		self.root.after(20, self.scoring_callback)
+		self.root.after(20, self._scoring_callback)
 
 	# All of these get new text values of the status bar
 	def _update_status(self):
@@ -129,7 +130,7 @@ class Game_Gui:
 		self.the_turn.set(turn_sts)
 		self.prisoners.set(prsn_sts)
 
-
+	# initially creates all the labels for the board
 	def create_board(self):
 		my_board = self.my_game.board
 		im_blck = tk.PhotoImage(file='~/Go/img/black.gif')
@@ -156,6 +157,7 @@ class Game_Gui:
 				lab.grid(row=i,column=j, padx = (0, 0), pady = (0,0))
 				lab.bind('<Button-1>',lambda e,i=i,j=j: self._on_click(i,j,e))
 			
+	# updates the images in the cell
 	def alter_board_cell(self, my_board, i, j):
 		
 		im_blck = tk.PhotoImage(file='~/Go/img/black.gif')
@@ -187,21 +189,22 @@ class Game_Gui:
 		except:
 			return False
 
-	def update_board(self):
+	# updates board. called when something happens to board
+	def _update_board(self):
 		# get current status of board from my_game instance
 		my_board = self.my_game.board
 
 		for i in range(self.size):
 			for j in range(self.size):
-				# try only updating when board changes
+				# only updates cell if changed. Otherwise takes too long
 				if self._board_changed(my_board, i, j) or len(self.my_game.board_hist) < 2:
 					self.alter_board_cell(my_board,i, j)
 	
 
 	# turns the board game into the right one
-	def gui_update(self):
+	def _gui_update(self):
 		print("starting updating the board...")
-		self.update_board()
+		self._update_board()
 		print("starting updating the status...")
 		self._update_status()
 		print("done computing updates...")
@@ -211,14 +214,13 @@ class Game_Gui:
 		print(i, j, self.turn)
 		move = i, j, self.turn
 
-		# all logic on board updating is contained here. 
+		# all logic on board updating is contained here
 		successful_move = self.my_game.update(move) 
 
 		# takes the game board and then updates it.
 		if successful_move:
-			self.gui_update()
+			self._gui_update()
 			self.turn = bd.flip(self.turn) # after turn ends, you flip
-
 
 my_game_gui = Game_Gui(20, 5.5)
 my_game_gui.create_board()
