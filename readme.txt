@@ -4,3 +4,4 @@ To run the program, clone it into a directory and run game_gui.py
 You must include the image files too
 
 test git with new computer
+test git with digitalocean
